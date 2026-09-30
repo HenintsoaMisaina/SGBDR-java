@@ -3,6 +3,7 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import  java.util.Date;
 
 import org.w3c.dom.Attr;
 
@@ -46,14 +47,14 @@ public class Relation {
             if (AtrName.equalsIgnoreCase("enum")) {
                 /* on va regarder un par un les choix d'enum et voir si le nup y correspond */
                 // verification
-                //System.out.println("je suis passer ici : enum");
+                // System.out.println("je suis passer ici : enum");
                 //
                 Object[] choices = attribut[i].getDomaine().getType();
                 for (int j = 0; j < choices.length; j++) {
                     if (nup.equals(choices[j])) {
                         /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
                         // verification
-                        //System.out.println("verification reussi : controle enum");
+                        // System.out.println("verification reussi : controle enum");
                         //
 
                         toAdd[i] = nup;
@@ -64,17 +65,17 @@ public class Relation {
             } else if (AtrName.equalsIgnoreCase("varchar")) {
                 int tailleMax = (int) attribut[i].getDomaine().getReferenceType();
                 // verification
-                //System.out.println("je suis passer ici : varchar");
+                // System.out.println("je suis passer ici : varchar");
                 //
                 if (nupletType.equalsIgnoreCase("string")) {
                     String stringNuplet = (String) nuplet[i];
                     // verification
-                    //System.out.println("verification reussi : controle varchar 1");
+                    // System.out.println("verification reussi : controle varchar 1");
                     //
 
                     if (stringNuplet.length() <= tailleMax) {
                         // verification
-                        //System.out.println("verification reussi : controle varchar 2");
+                        // System.out.println("verification reussi : controle varchar 2");
                         //
                         toAdd[i] = nup;
                     }
@@ -84,9 +85,16 @@ public class Relation {
             } else if (AtrType.equalsIgnoreCase(nupletType)) {
                 /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
                 // verification
-                //System.out.println("je suis passer ici : int | date | double");
+                // System.out.println("je suis passer ici : int | date | double");
                 //
-                toAdd[i] = nup;
+                if (AtrName.equalsIgnoreCase("date")) {
+                    Date thisDate = (Date) nup;
+                    String yymmdd = thisDate.toString();
+                    toAdd[i] = yymmdd;
+                }else {
+                    toAdd[i] = nup;
+                }
+
             }
 
         }

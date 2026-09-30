@@ -15,5 +15,8 @@ public class main {
         emp.add(new Object[]{"RAKOTONIRINA", "Vahatra Ny Aina", new Date(2008, 11, 3), "m"});
         emp.add(new Object[]{"RAKOTO", "Son", new Date(1989, 12, 25), 1});
         emp.select();
+
+        Date test = new Date(2026, 9,12);
+        System.out.println(test);
     }
 }
