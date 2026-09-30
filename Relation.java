@@ -101,6 +101,11 @@ public class Relation {
     public void select() {
         int nbrIndividu = this.individu.size();
         int nbrAttribut = this.attribut.length;
+        String tete = "| ";
+        for (int j=0 ; j<nbrAttribut ;j++){
+            tete= tete+ this.attribut[j].getName() + " |";
+        }
+        System.out.println(tete);
         for (int i = 0; i < nbrIndividu; i++) {
             Object[] thisOne = this.individu.get(i);
             String ligne = "| ";
@@ -109,6 +114,7 @@ public class Relation {
             }
             System.out.println(ligne);
         }
+        System.out.println("");
     }
 
 }
