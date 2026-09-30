@@ -18,5 +18,19 @@ public class main {
 
         Date test = new Date(2026, 9,12);
         System.out.println(test);
+
+        Attribut choix = new Attribut("choix", new Domaine("enum", new Object[]{"Rakoto", "Rasoa" ,0}));
+        Attribut id = new Attribut("id", new Domaine("int"));
+
+        Relation testChoix = new Relation("testChoix", new Attribut[]{id, choix});
+        testChoix.add(new Object[]{0,"Rakoto"});
+        testChoix.add(new Object[]{1,"Rasoa"});
+        testChoix.add(new Object[]{2, 0});
+        testChoix.add(new Object[]{"a", 0});
+        testChoix.add(new Object[]{3, 12});
+        testChoix.add(new Object[]{"tsy mety", 13});
+
+        testChoix.select();
+
     }
 }

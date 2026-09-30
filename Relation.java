@@ -3,7 +3,7 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-import  java.util.Date;
+import java.util.Date;
 
 import org.w3c.dom.Attr;
 
@@ -29,21 +29,10 @@ public class Relation {
         for (int i = 0; i < tailleAtr; i++) {
             /* exemple x1 => domaine : varchar */
             String AtrName = this.attribut[i].getDomaine().getName(); // "pour le nom : VARCHAR"
-            String AtrType = this.attribut[i].getDomaine().getReferenceType().getClass().getSimpleName(); // "pour
-                                                                                                          // le
-                                                                                                          // nom :
-                                                                                                          // INT
-                                                                                                          // ** car
-                                                                                                          // c'est
-                                                                                                          // la
-                                                                                                          // taille
-                                                                                                          // qui
-                                                                                                          // est
-                                                                                                          // dans
-                                                                                                          // type "
 
             String nupletType = nuplet[i].getClass().getSimpleName(); // "pour le nom : String"
             Object nup = nuplet[i];
+            
             if (AtrName.equalsIgnoreCase("enum")) {
                 /* on va regarder un par un les choix d'enum et voir si le nup y correspond */
                 // verification
@@ -82,19 +71,25 @@ public class Relation {
                 } else {
                     System.out.println("données entrer n'est pas un varchar");
                 }
-            } else if (AtrType.equalsIgnoreCase(nupletType)) {
-                /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
-                // verification
-                // System.out.println("je suis passer ici : int | date | double");
-                //
-                if (AtrName.equalsIgnoreCase("date")) {
-                    Date thisDate = (Date) nup;
-                    String yymmdd = thisDate.toString();
-                    toAdd[i] = yymmdd;
-                }else {
-                    toAdd[i] = nup;
-                }
+            } else {
+                /* nb : le doute teto de oe , aona mo zany le int sy integer */
+                /* tsy maninona le izy satria a partir du moment oe tsy enum sy varchar de tsy mijery name tsika fa type amzay */
 
+                String AtrType = this.attribut[i].getDomaine().getReferenceType().getClass().getSimpleName();
+                if (AtrType.equalsIgnoreCase(nupletType)) {
+                    /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
+                    // verification
+                    // System.out.println("je suis passer ici : int | date | double");
+                    //
+                    if (AtrName.equalsIgnoreCase("date")) {
+                        Date thisDate = (Date) nup;
+                        String yymmdd = thisDate.toString();
+                        toAdd[i] = yymmdd;
+                    } else {
+                        toAdd[i] = nup;
+                    }
+
+                }
             }
 
         }

@@ -14,7 +14,7 @@ public class Domaine {
     public Domaine(){}
     
     public Domaine(String srt){
-        if (srt.equalsIgnoreCase("INTEGER")){
+        if (srt.equalsIgnoreCase("INTEGER") || srt.equalsIgnoreCase("INT") ){
             this.name = srt;
             this.type = new Object[]{1};
         }else if (srt.equalsIgnoreCase("DOUBLE")){
