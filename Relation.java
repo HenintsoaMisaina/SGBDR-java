@@ -1,16 +1,22 @@
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
-import java.util.Date;
 
 import org.w3c.dom.Attr;
+
+import java.util.Date;
 
 public class Relation {
     String nom;
     Attribut[] attribut;
     List<Object[]> individu;
+
+    public void setNom(String name) {
+        this.nom = name;
+    }
 
     public Relation(String nom, Attribut[] Atr) {
         this.nom = nom;
@@ -32,7 +38,7 @@ public class Relation {
 
             String nupletType = nuplet[i].getClass().getSimpleName(); // "pour le nom : String"
             Object nup = nuplet[i];
-            
+
             if (AtrName.equalsIgnoreCase("enum")) {
                 /* on va regarder un par un les choix d'enum et voir si le nup y correspond */
                 // verification
@@ -73,7 +79,10 @@ public class Relation {
                 }
             } else {
                 /* nb : le doute teto de oe , aona mo zany le int sy integer */
-                /* tsy maninona le izy satria a partir du moment oe tsy enum sy varchar de tsy mijery name tsika fa type amzay */
+                /*
+                 * tsy maninona le izy satria a partir du moment oe tsy enum sy varchar de tsy
+                 * mijery name tsika fa type amzay
+                 */
 
                 String AtrType = this.attribut[i].getDomaine().getReferenceType().getClass().getSimpleName();
                 if (AtrType.equalsIgnoreCase(nupletType)) {
@@ -102,8 +111,8 @@ public class Relation {
         int nbrIndividu = this.individu.size();
         int nbrAttribut = this.attribut.length;
         String tete = "| ";
-        for (int j=0 ; j<nbrAttribut ;j++){
-            tete= tete+ this.attribut[j].getName() + " |";
+        for (int j = 0; j < nbrAttribut; j++) {
+            tete = tete + this.attribut[j].getName() + " |";
         }
         System.out.println(tete);
         for (int i = 0; i < nbrIndividu; i++) {
@@ -115,6 +124,56 @@ public class Relation {
             System.out.println(ligne);
         }
         System.out.println("");
+    }
+
+    public void NoDoublon() {
+        int nbrIndividu = this.individu.size();
+
+        for (int i = 0; i < nbrIndividu; i++) {
+
+            Object[] toCompare = this.individu.get(i);
+            for (int j = i + 1; j < nbrIndividu; j++) {
+                Object[] toMe = this.individu.get(j);
+                if (Arrays.equals(toCompare, toMe)) {
+                    this.individu.remove(j);
+                    nbrIndividu--;
+                    j--;
+                }
+            }
+        }
+
+    }
+
+    public Relation project(Attribut[] toproject) {
+        Relation toreturn = new Relation("default", toproject);
+
+        int nbrIndividu = this.individu.size();
+        int nbrAttribut = this.attribut.length;
+        int[] index = new int[toproject.length];
+
+        for (int j = 0; j < toproject.length; j++) {
+            Attribut projection = toproject[j];
+            for (int i = 0; i < nbrAttribut; i++) {
+                Attribut attribut = this.attribut[i];
+                if (attribut.equals(projection)) {
+                    index[j] = i;
+                    break;
+                }
+            }
+        }
+
+        for (int k = 0; k < nbrIndividu; k++) {
+            Object[] concern = this.individu.get(k);
+            Object[] ajout = new Object[toproject.length];
+            int b=0;
+            for(int o=0; o<toproject.length;o++){    
+                ajout[b] = concern[index[o]];
+                b++;
+            }
+            toreturn.add(ajout);
+        }
+        toreturn.NoDoublon();
+        return toreturn;
     }
 
 }
