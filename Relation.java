@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.lang.reflect.*;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -144,15 +145,13 @@ public class Relation {
 
     }
 
-    public Relation project(Attribut[] toproject) {
-        Relation toreturn = new Relation("default", toproject);
-
+    public int[] getIndexOfAttribut(Attribut[] attributs) {
         int nbrIndividu = this.individu.size();
         int nbrAttribut = this.attribut.length;
-        int[] index = new int[toproject.length];
+        int[] index = new int[attributs.length];
 
-        for (int j = 0; j < toproject.length; j++) {
-            Attribut projection = toproject[j];
+        for (int j = 0; j < attributs.length; j++) {
+            Attribut projection = attributs[j];
             for (int i = 0; i < nbrAttribut; i++) {
                 Attribut attribut = this.attribut[i];
                 if (attribut.equals(projection)) {
@@ -161,12 +160,21 @@ public class Relation {
                 }
             }
         }
+        return index;
+    }
+
+    public Relation project(Attribut[] toproject) {
+        Relation toreturn = new Relation("default", toproject);
+
+        int nbrIndividu = this.individu.size();
+        int nbrAttribut = this.attribut.length;
+        int[] index = this.getIndexOfAttribut(toproject);
 
         for (int k = 0; k < nbrIndividu; k++) {
             Object[] concern = this.individu.get(k);
             Object[] ajout = new Object[toproject.length];
-            int b=0;
-            for(int o=0; o<toproject.length;o++){    
+            int b = 0;
+            for (int o = 0; o < toproject.length; o++) {
                 ajout[b] = concern[index[o]];
                 b++;
             }
@@ -175,5 +183,7 @@ public class Relation {
         toreturn.NoDoublon();
         return toreturn;
     }
+
+
 
 }
