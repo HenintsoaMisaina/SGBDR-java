@@ -1,4 +1,4 @@
-import  java.util.Date;
+import java.util.Date;
 
 /*Objectif : avoir un domaine comme dans tous SGBDR*/
 
@@ -11,51 +11,68 @@ public class Domaine {
     String name;
     Object[] type;
 
-    public Domaine(){}
-    
-    public Domaine(String srt){
-        if (srt.equalsIgnoreCase("INTEGER") || srt.equalsIgnoreCase("INT") ){
+    public Domaine() {
+    }
+
+    public Domaine(String srt) {
+        if (srt.equalsIgnoreCase("INTEGER") || srt.equalsIgnoreCase("INT")) {
             this.name = srt;
-            this.type = new Object[]{1};
-        }else if (srt.equalsIgnoreCase("DOUBLE")){
+            this.type = new Object[] { 1 };
+        } else if (srt.equalsIgnoreCase("DOUBLE")) {
             this.name = srt;
             Double a = 0.1;
-            this.type = new Object[]{a};
-        }else if (srt.equalsIgnoreCase("DATE")){
+            this.type = new Object[] { a };
+        } else if (srt.equalsIgnoreCase("DATE")) {
             this.name = srt;
-            Date a = new Date(1999, 01 ,01);
-            this.type = new Object[]{a};
+            Date a = new Date(1999, 01, 01);
+            this.type = new Object[] { a };
         }
     }
 
-    public Domaine(String varchar, int taille){
-        if (varchar.equalsIgnoreCase("VARCHAR")){
+    public Domaine(String intLimite, int a, int b) {
+        if (intLimite.equalsIgnoreCase("int")) {
+            if (a < b) {
+                this.name = intLimite;
+                this.type = new Object[] { a, b };
+            }
+
+        } else {
+            System.out.println("erreur syntaxe");
+        }
+    }
+
+    public Domaine(String varchar, int taille) {
+        if (varchar.equalsIgnoreCase("VARCHAR")) {
             this.name = "VARCHAR";
-            this.type = new Object[]{taille};
-        }else {
+            this.type = new Object[] { taille };
+        } else {
             System.out.println("erreur : VARCHAR|varchar is the correct syntax");
         }
     }
 
-    public Domaine(String enumeration, Object[] choix){
-        if (enumeration.equalsIgnoreCase("ENUM")){
+    public Domaine(String enumeration, Object[] choix) {
+        if (enumeration.equalsIgnoreCase("ENUM")) {
             this.name = "ENUM";
             this.type = choix;
-        }else {
+        } else {
             System.out.println("erreur de syntax");
         }
     }
-    
-    public String getName(){
+
+    public String getName() {
         return this.name;
     }
 
-    public Object getReferenceType(){
+    public Object getReferenceType() {
         return this.type[0];
     }
 
-    public Object[] getType(){
+    public Object[] getType() {
         return this.type;
     }
 
+    public int getTypeLength(){
+        return  this.type.length;
+    }
+    
 }

@@ -95,6 +95,20 @@ public class Relation {
                         Date thisDate = (Date) nup;
                         String yymmdd = thisDate.toString();
                         toAdd[i] = yymmdd;
+                    }else if(AtrName.equalsIgnoreCase("int")){
+                        int numbr = (int) nup;
+                        int typeLength = this.attribut[i].getDomaine().getTypeLength();
+                        Object[] tip = this.attribut[i].getDomaine().getType();
+
+                        if (typeLength==2){
+                            int min = (int) tip[0];
+                            int max = (int) tip[1];
+                            if (numbr>=min && numbr<=max){
+                               toAdd[i] = numbr;                            
+                            }
+                        }else {
+                            toAdd[i] = nup;                            
+                        }
                     } else {
                         toAdd[i] = nup;
                     }
@@ -146,13 +160,10 @@ public class Relation {
     }
 
     public int[] getIndexOfAttribut(Attribut[] attributs) {
-        int nbrIndividu = this.individu.size();
-        int nbrAttribut = this.attribut.length;
         int[] index = new int[attributs.length];
-
         for (int j = 0; j < attributs.length; j++) {
             Attribut projection = attributs[j];
-            for (int i = 0; i < nbrAttribut; i++) {
+            for (int i = 0; i < this.attribut.length; i++) {
                 Attribut attribut = this.attribut[i];
                 if (attribut.equals(projection)) {
                     index[j] = i;
@@ -183,7 +194,5 @@ public class Relation {
         toreturn.NoDoublon();
         return toreturn;
     }
-
-
 
 }
