@@ -18,7 +18,16 @@ public class main {
         emp.add(new Object[]{"RAZAFIMANDIMBY", "Walker", 100, "m"});
         emp.add(new Object[]{"ROBSON RADO", "Henintsoa Misaina", 18, "m"});
         emp.select();
-        Relation sexeFotsiny = emp.project(new Attribut[]{sexe});
-        sexeFotsiny.select();
+
+
+        Attribut numero = new Attribut("numero", new Domaine("int"));
+        Attribut signature = new Attribut("signature", new Domaine("varchar", 20));
+
+        Relation rien = new Relation("rien", new Attribut[]{numero, signature});
+        rien.add(new Object[]{1, "ssh"});
+
+        Relation test = emp.produit(rien);
+        test.select();
+
     }
 }

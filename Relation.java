@@ -19,6 +19,14 @@ public class Relation {
         this.nom = name;
     }
 
+    public List getIndividu() {
+        return this.individu;
+    }
+
+    public Attribut[] getAttribut() {
+        return this.attribut;
+    }
+
     public Relation(String nom, Attribut[] Atr) {
         this.nom = nom;
         this.attribut = Atr;
@@ -95,19 +103,19 @@ public class Relation {
                         Date thisDate = (Date) nup;
                         String yymmdd = thisDate.toString();
                         toAdd[i] = yymmdd;
-                    }else if(AtrName.equalsIgnoreCase("int")){
+                    } else if (AtrName.equalsIgnoreCase("int")) {
                         int numbr = (int) nup;
                         int typeLength = this.attribut[i].getDomaine().getTypeLength();
                         Object[] tip = this.attribut[i].getDomaine().getType();
 
-                        if (typeLength==2){
+                        if (typeLength == 2) {
                             int min = (int) tip[0];
                             int max = (int) tip[1];
-                            if (numbr>=min && numbr<=max){
-                               toAdd[i] = numbr;                            
+                            if (numbr >= min && numbr <= max) {
+                                toAdd[i] = numbr;
                             }
-                        }else {
-                            toAdd[i] = nup;                            
+                        } else {
+                            toAdd[i] = nup;
                         }
                     } else {
                         toAdd[i] = nup;
@@ -192,6 +200,46 @@ public class Relation {
             toreturn.add(ajout);
         }
         toreturn.NoDoublon();
+        return toreturn;
+    }
+
+    public Relation produit(Relation relation2) {
+        Attribut[] Atr1 = this.getAttribut();
+        Attribut[] Atr2 = relation2.getAttribut();
+
+        List Ind1 = this.getIndividu();
+        List Ind2 = relation2.getIndividu();
+
+        int newAtrLength = relation2.getAttributLength() + this.getAttributLength();
+        Attribut[] newAtr = new Attribut[newAtrLength];
+        for (int i = 0; i < this.getAttributLength(); i++) {
+            newAtr[i] = Atr1[i];
+        }
+        for (int i = 0; i < relation2.getAttributLength(); i++) {
+            newAtr[Atr1.length + i] = Atr2[i];
+        }
+
+        Relation toreturn = new Relation("default", newAtr);
+
+        for (int i = 0; i < Ind1.size(); i++) {
+            Object[] I = (Object[]) Ind1.get(i);
+
+            for (int j = 0; j < Ind2.size(); j++) {
+                List individuel = new ArrayList<>();
+
+                for (int i1 = 0; i1 < I.length; i1++) {
+                    individuel.add(I[i1]);
+                }
+
+                Object[] J = (Object[]) Ind2.get(j);
+                for (int j1 = 0; j1 < J.length; j1++) {
+                    individuel.add(J[j1]);
+                }
+
+                toreturn.add(individuel.toArray());
+            }
+        }
+
         return toreturn;
     }
 
