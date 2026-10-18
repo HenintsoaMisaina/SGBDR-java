@@ -29,5 +29,8 @@ public class main {
         Relation test = emp.produit(rien);
         test.select();
 
+        Relation testSelection = emp.selection(sexe, "m");
+        testSelection.select();
+
     }
 }

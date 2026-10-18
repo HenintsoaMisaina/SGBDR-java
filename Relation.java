@@ -243,4 +243,21 @@ public class Relation {
         return toreturn;
     }
 
+    public Relation selection(Attribut atr, Object val){
+        Relation toreturn = new Relation("default", getAttribut());
+        int x=0;
+        for(int i=0; i<this.attribut.length; i++){
+            if (attribut[i].equals(atr)){
+                x=i;  
+            }
+        }
+        for(int i=0; i<this.individu.size(); i++){
+            Object[] one = (Object[]) this.individu.get(i);
+            if (one[x].equals(val)){
+                toreturn.add(one);
+            }
+        }
+        return  toreturn;
+    }
+
 }
