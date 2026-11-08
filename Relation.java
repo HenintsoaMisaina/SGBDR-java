@@ -4,7 +4,10 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
+
+import javax.security.sasl.RealmCallback;
 
 import org.w3c.dom.Attr;
 
@@ -135,7 +138,7 @@ public class Relation {
         int nbrAttribut = this.attribut.length;
         String tete = "| ";
         for (int j = 0; j < nbrAttribut; j++) {
-            tete = tete + this.attribut[j].getName() + " |";
+            tete = tete + this.attribut[j].getName() + " | ";
         }
         System.out.println(tete);
         for (int i = 0; i < nbrIndividu; i++) {
@@ -243,21 +246,247 @@ public class Relation {
         return toreturn;
     }
 
-    public Relation selection(Attribut atr, Object val){
-        Relation toreturn = new Relation("default", getAttribut());
-        int x=0;
-        for(int i=0; i<this.attribut.length; i++){
-            if (attribut[i].equals(atr)){
-                x=i;  
+    public int indexOf(Attribut atr) {
+        for (int i = 0; i < this.attribut.length; i++) {
+            if (this.attribut[i].equals(atr)) {
+                return i;
             }
         }
-        for(int i=0; i<this.individu.size(); i++){
+        return 0;
+    }
+
+    public Relation selection_egal(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        for (int i = 0; i < this.individu.size(); i++) {
             Object[] one = (Object[]) this.individu.get(i);
-            if (one[x].equals(val)){
+            if (one[x].equals(val)) {
                 toreturn.add(one);
             }
         }
-        return  toreturn;
+        return toreturn;
     }
 
+    public Relation selection_different(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] one = (Object[]) this.individu.get(i);
+            if (!one[x].equals(val)) {
+                toreturn.add(one);
+            }
+        }
+        return toreturn;
+    }
+
+    public Relation selection_superieur(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        double valeur = ((Number) val).doubleValue();
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] one = (Object[]) this.individu.get(i);
+            double courant = ((Number) one[x]).doubleValue();
+            if (courant > valeur) {
+                toreturn.add(one);
+            }
+        }
+        return toreturn;
+    }
+
+    public Relation selection_inferieur(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        double valeur = ((Number) val).doubleValue();
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] one = (Object[]) this.individu.get(i);
+            double courant = ((Number) one[x]).doubleValue();
+            if (courant < valeur) {
+                toreturn.add(one);
+            }
+        }
+        return toreturn;
+    }
+
+    public Relation selection_superieur_egal(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        double valeur = ((Number) val).doubleValue();
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] one = (Object[]) this.individu.get(i);
+            double courant = ((Number) one[x]).doubleValue();
+            if (courant >= valeur) {
+                toreturn.add(one);
+            }
+        }
+        return toreturn;
+    }
+
+    public Relation selection_inferieur_egal(Attribut atr, Object val) {
+        Relation toreturn = new Relation("default", getAttribut());
+        int x = this.indexOf(atr);
+        double valeur = ((Number) val).doubleValue();
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] one = (Object[]) this.individu.get(i);
+            double courant = ((Number) one[x]).doubleValue();
+            if (courant <= valeur) {
+                toreturn.add(one);
+            }
+        }
+        return toreturn;
+    }
+
+    public Relation jointure(Attribut atr1, String operation, Relation autre, Attribut atr2) {
+        /* Operation : "=" "!=" "<" ">" "<=" ">=" */
+        Relation toReturn = this.produit(autre);
+        int x = this.indexOf(atr1);
+        int y = this.getAttributLength() + autre.indexOf(atr2);
+        boolean garder;
+
+        for (int i = toReturn.individu.size() - 1; i >= 0; i--) {
+            Object[] a = (Object[]) toReturn.individu.get(i);
+            garder = true;
+            if (operation.equals("=")) {
+                garder = Objects.equals(a[x], a[y]);
+            } else if (operation.equals("!=")) {
+                garder = !Objects.equals(a[x], a[y]);
+            } else {
+                double gauche = ((Number) a[x]).doubleValue();
+                double droite = ((Number) a[y]).doubleValue();
+                if (operation.equals(">")) {
+                    garder = gauche > droite;
+                } else if (operation.equals("<")) {
+                    garder = gauche < droite;
+                } else if (operation.equals(">=")) {
+                    garder = gauche >= droite;
+                } else if (operation.equals("<=")) {
+                    garder = gauche <= droite;
+                }
+            }
+            if (!garder) {
+                toReturn.individu.remove(i);
+            }
+        }
+        return toReturn;
+    }
+
+    public Relation jointure(Attribut atr1, String operation, Relation autre, Object value) {
+        /* Operation : "=" "!=" "<" ">" "<=" ">=" */
+        Relation toReturn = this.produit(autre);
+        int x = this.indexOf(atr1);
+        boolean garder;
+
+        for (int i = toReturn.individu.size() - 1; i >= 0; i--) {
+            Object[] a = (Object[]) toReturn.individu.get(i);
+            garder = true;
+            if (operation.equals("=")) {
+                garder = Objects.equals(a[x], value);
+            } else if (operation.equals("!=")) {
+                garder = !Objects.equals(a[x], value);
+            } else {
+                double gauche = ((Number) a[x]).doubleValue();
+                double droite = ((Number) value).doubleValue();
+                if (operation.equals(">")) {
+                    garder = gauche > droite;
+                } else if (operation.equals("<")) {
+                    garder = gauche < droite;
+                } else if (operation.equals(">=")) {
+                    garder = gauche >= droite;
+                } else if (operation.equals("<=")) {
+                    garder = gauche <= droite;
+                }
+            }
+            if (!garder) {
+                toReturn.individu.remove(i);
+            }
+        }
+        return toReturn;
+    }
+
+    public Relation jointure(Attribut atr1, String operation, Relation autre, Attribut atr2, Number decalage) {
+        Relation toReturn = this.produit(autre);
+        int x = this.indexOf(atr1);
+        int y = this.getAttributLength() + autre.indexOf(atr2);
+        boolean garder;
+
+        for (int i = toReturn.individu.size() - 1; i >= 0; i--) {
+            Object[] a = (Object[]) toReturn.individu.get(i);
+            garder = true;
+            double gauche = ((Number) a[x]).doubleValue();
+            double droite = ((Number) a[y]).doubleValue() + decalage.doubleValue();
+            if (operation.equals("=")) {
+                garder = gauche == droite;
+            } else if (operation.equals("!=")) {
+                garder = gauche != droite;
+            } else if (operation.equals(">")) {
+                garder = gauche > droite;
+            } else if (operation.equals("<")) {
+                garder = gauche < droite;
+            } else if (operation.equals(">=")) {
+                garder = gauche >= droite;
+            } else if (operation.equals("<=")) {
+                garder = gauche <= droite;
+            }
+            if (!garder) {
+                toReturn.individu.remove(i);
+            }
+        }
+        return toReturn;
+    }
+
+    public Relation jointureGauche(Attribut atr1, String operation, Relation autre, Attribut atr2, Number decalage) {
+        int tg = this.getAttributLength();
+        int td = autre.getAttributLength();
+        Attribut[] newAtr = new Attribut[tg + td];
+        for (int i = 0; i < tg; i++) {
+            newAtr[i] = this.attribut[i];
+        }
+        for (int i = 0; i < td; i++) {
+            newAtr[tg + i] = autre.attribut[i];
+        }
+
+        Relation toReturn = new Relation("default", newAtr);
+        int x = this.indexOf(atr1);
+        int y = autre.indexOf(atr2); 
+        boolean garder;
+
+        for (int i = 0; i < this.individu.size(); i++) {
+            Object[] g = this.individu.get(i);
+            boolean trouve = false;
+
+            for (int j = 0; j < autre.individu.size(); j++) {
+                Object[] d = autre.individu.get(j);
+                double gauche = ((Number) g[x]).doubleValue() + decalage.doubleValue();
+                double droite = ((Number) d[y]).doubleValue();
+                garder = false;
+                if (operation.equals("=")) {
+                    garder = gauche == droite;
+                } else if (operation.equals("!=")) {
+                    garder = gauche != droite;
+                } else if (operation.equals(">")) {
+                    garder = gauche > droite;
+                } else if (operation.equals("<")) {
+                    garder = gauche < droite;
+                } else if (operation.equals(">=")) {
+                    garder = gauche >= droite;
+                } else if (operation.equals("<=")) {
+                    garder = gauche <= droite;
+                }
+
+                if (garder) {
+                    Object[] ligne = new Object[tg + td];
+                    System.arraycopy(g, 0, ligne, 0, tg);
+                    System.arraycopy(d, 0, ligne, tg, td);
+                    toReturn.individu.add(ligne);
+                    trouve = true;
+                }
+            }
+
+            if (!trouve) {
+                Object[] ligne = new Object[tg + td];
+                System.arraycopy(g, 0, ligne, 0, tg);
+                toReturn.individu.add(ligne);
+            }
+        }
+        return toReturn;
+    }
 }
