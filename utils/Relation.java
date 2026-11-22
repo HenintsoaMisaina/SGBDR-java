@@ -5,9 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Relation {
-    String nom;
-    Attribut[] attribut;
-    List<Object[]> individu;
+    private String nom;
+    private Attribut[] attribut;
+    private List<Object[]> individu;
 
     public Relation() {
     }
@@ -20,7 +20,7 @@ public class Relation {
         return this.nom;
     }
 
-    public List getIndividu() {
+    public List<Object[]> getIndividu() {
         return this.individu;
     }
 
@@ -257,8 +257,8 @@ public class Relation {
         Attribut[] Atr1 = this.getAttribut();
         Attribut[] Atr2 = relation2.getAttribut();
 
-        List Ind1 = this.getIndividu();
-        List Ind2 = relation2.getIndividu();
+        List<Object[]> Ind1 = this.getIndividu();
+        List<Object[]> Ind2 = relation2.getIndividu();
 
         int newAtrLength = relation2.getAttributLength() + this.getAttributLength();
         Attribut[] newAtr = new Attribut[newAtrLength];
@@ -284,7 +284,7 @@ public class Relation {
             Object[] I = (Object[]) Ind1.get(i);
 
             for (int j = 0; j < Ind2.size(); j++) {
-                List individuel = new ArrayList<>();
+                List<Object> individuel = new ArrayList<>();
 
                 for (int i1 = 0; i1 < I.length; i1++) {
                     individuel.add(I[i1]);
@@ -427,7 +427,7 @@ public class Relation {
         Relation resultat = new Relation(newName, getAttribut());
 
         for (int i = 0; i < this.individu.size(); i++) {
-            Object[] ligne = (Object[]) this.individu.get(i);
+            Object[] ligne = this.individu.get(i);
 
             Object valeurGauche = ligne[x];
             Object valeurDroite;
@@ -477,4 +477,61 @@ public class Relation {
         }
         return resultat;
     }
+
+    public void estCompatible(Relation autre){
+
+        if (autre.getAttribut().length != this.getAttribut().length){
+            throw new IllegalArgumentException("Relation incompatible : nombre de colonne ");
+        }
+
+        for (int i=0; i<this.getAttribut().length ;i++){
+            Attribut a1 = this.getAttribut()[i];
+            Attribut a2 = autre.getAttribut()[i];
+            if (!a1.getName().equalsIgnoreCase(a2.getName())){
+                throw new IllegalArgumentException("Relation incompatible  : nom colonne different " );
+            }
+            if (!a1.getDomaine().equals(a2.getDomaine())){
+                throw new IllegalArgumentException("Relation incompatible  : domaine different ");
+            }
+        }
+    }
+
+    public boolean contient(Object[] individu){
+        for (Object[] one : this.getIndividu()){
+            if (Arrays.equals(one , individu)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Relation intersection(Relation autre, String newName){
+
+        this.estCompatible(autre);
+        
+        Relation toReturn = new Relation(newName, this.getAttribut());
+
+        for(Object[] individu : autre.getIndividu()){
+            if (this.contient(individu)){
+                toReturn.add(individu);
+            }
+        }
+        toReturn.NoDoublon();
+        return toReturn;
+    }
+
+    public Relation difference(Relation autre, String newName){
+
+        this.estCompatible(autre);
+        
+        Relation toReturn = new Relation(newName, this.getAttribut());
+
+        for(Object[] individu : autre.getIndividu()){
+            if (!autre.contient(individu)){
+                toReturn.add(individu);
+            }
+        }
+        return toReturn;
+    }
+
 }

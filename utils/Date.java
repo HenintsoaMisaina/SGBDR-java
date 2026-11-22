@@ -53,7 +53,8 @@ public class Date {
     public int getDay() {
         return this.day;
     }
-
+    
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof Date)) {
             return false;

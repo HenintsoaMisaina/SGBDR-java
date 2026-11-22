@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.Arrays;
+
 /*Objectif : avoir un domaine comme dans tous SGBDR*/
 
 /*Idée : le sgbdr doit avoir des syntaxe precis comme dans tout sgbdr connu */
@@ -24,7 +26,7 @@ public class Domaine {
             this.type = new Object[] { a };
         } else if (srt.equalsIgnoreCase("DATE")) {
             this.name = srt;
-            Date a = new Date(1999, 01, 01);
+            Date a = new Date(1999, 1, 1);
             this.type = new Object[] { a };
         } else {
             throw new IllegalArgumentException("Type inconnu : " + srt);
@@ -84,6 +86,18 @@ public class Domaine {
 
     public int getTypeLength() {
         return this.type.length;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o){            
+            return true;
+        }
+        if (!(o instanceof Domaine)){
+            return false;
+        }
+        Domaine d = (Domaine) o;
+        return name.equalsIgnoreCase(d.name) && Arrays.equals(type, d.type);
     }
 
 }
