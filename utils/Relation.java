@@ -28,7 +28,7 @@ public class Relation {
         return this.attribut;
     }
 
-    public Relation renommer(String alias) {
+    public Relation as(String alias) {
         Attribut[] a = new Attribut[attribut.length];
         for (int i = 0; i < a.length; i++) {
             a[i] = attribut[i].qualifie(alias);
@@ -57,6 +57,12 @@ public class Relation {
 
     public void add(Object[] nuplet) {
 
+        // on verifie que le nuplet a autant de valeurs que d'attributs
+        if (nuplet.length != this.getAttributLength()) {
+            throw new IllegalArgumentException(
+                    "Nombre de valeurs incorrect : attendu " + this.getAttributLength() + ", recu " + nuplet.length);
+        }
+
         int tailleAtr = this.getAttributLength();
         Object[] toAdd = new Object[tailleAtr];
         for (int i = 0; i < tailleAtr; i++) {
@@ -76,6 +82,7 @@ public class Relation {
                 // System.out.println("je suis passer ici : enum");
                 //
                 Object[] choices = attribut[i].getDomaine().getType();
+                boolean trouve = false;
                 for (int j = 0; j < choices.length; j++) {
                     if (nup.equals(choices[j])) {
                         /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
@@ -84,7 +91,13 @@ public class Relation {
                         //
 
                         toAdd[i] = nup;
+                        trouve = true;
+                        break;
                     }
+                }
+                if (!trouve) {
+                    throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName() + " : valeur '"
+                            + nup + "' hors enum " + Arrays.toString(choices));
                 }
             } else if (AtrName.equalsIgnoreCase("varchar")) {
                 int tailleMax = (int) attribut[i].getDomaine().getReferenceType();
@@ -102,9 +115,13 @@ public class Relation {
                         // System.out.println("verification reussi : controle varchar 2");
                         //
                         toAdd[i] = nup;
+                    } else {
+                        throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName() + " : '" + nup
+                                + "' depasse " + tailleMax + " caracteres");
                     }
                 } else {
-                    System.out.println("données entrer n'est pas un varchar");
+                    throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName()
+                            + " : attendu String (varchar), recu " + nupletType);
                 }
             } else {
                 /* nb : le doute teto de oe , aona mo zany le int sy integer */
@@ -112,13 +129,11 @@ public class Relation {
                  * tsy maninona le izy satria a partir du moment oe tsy enum sy varchar de tsy
                  * mijery name tsika fa type amzay
                  */
-
                 String AtrType = this.attribut[i].getDomaine().getReferenceType().getClass().getSimpleName();
                 if (AtrType.equalsIgnoreCase(nupletType)) {
                     /* INTEGRATION NORMALE DANS LE TABLEAU DOUBLE */
                     // verification
                     // System.out.println("je suis passer ici : int | date | double");
-                    //
                     if (AtrName.equalsIgnoreCase("date")) {
                         toAdd[i] = nup;
                     } else if (AtrName.equalsIgnoreCase("int")) {
@@ -131,6 +146,9 @@ public class Relation {
                             int max = (int) tip[1];
                             if (numbr >= min && numbr <= max) {
                                 toAdd[i] = numbr;
+                            } else {
+                                throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName() + " : "
+                                        + numbr + " hors de l'intervalle [" + min + ", " + max + "]");
                             }
                         } else {
                             toAdd[i] = nup;
@@ -139,6 +157,9 @@ public class Relation {
                         toAdd[i] = nup;
                     }
 
+                } else {
+                    throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName() + " : attendu "
+                            + AtrType + ", recu " + nupletType);
                 }
             }
 
@@ -147,7 +168,6 @@ public class Relation {
         individu.add(toAdd);
 
     }
-
 
     public void select() {
         if (this.individu == null) {
@@ -249,6 +269,15 @@ public class Relation {
             newAtr[Atr1.length + i] = Atr2[i];
         }
 
+        for (int i = 0; i < newAtr.length; i++) {
+            for (int j = i + 1; j < newAtr.length; j++) {
+                if (newAtr[i].getSecondName().equals(newAtr[j].getSecondName())) {
+                    throw new IllegalArgumentException("Colonne ambigue : " + newAtr[i].getSecondName()
+                            + " (utilise as(...) sur l'une des relations)");
+                }
+            }
+        }
+
         Relation toreturn = new Relation(newName, newAtr);
 
         for (int i = 0; i < Ind1.size(); i++) {
@@ -286,7 +315,18 @@ public class Relation {
         if (domaine.equalsIgnoreCase("varchar") || domaine.equalsIgnoreCase("enum")) {
             return texte;
         }
-        return Double.parseDouble(texte);
+        if (domaine.equalsIgnoreCase("date")) {
+            try {
+                return Date.parse(texte);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Colonne inconnue ou date invalide (format aaaa/mm/jj) : " + texte);
+            }
+        }
+        try {
+            return Double.parseDouble(texte);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Colonne inconnue ou valeur invalide : " + texte);
+        }
     }
 
     public int comparer(Object a, Object b) {
@@ -361,7 +401,11 @@ public class Relation {
     }
 
     public Relation selection(String condition, String newName) {
+        condition = condition.trim().replaceAll("\\s+", " ");
         String[] morceaux = condition.split(" ", 3);
+        if (morceaux.length < 3) {
+            throw new IllegalArgumentException("Condition invalide (format : colonne operateur valeur) : " + condition);
+        }
         String nomGauche = morceaux[0];
         String operateur = morceaux[1];
         String droite = morceaux[2];
@@ -372,8 +416,7 @@ public class Relation {
         int y = calcul ? -1 : indexParNom(morceaux[2]);
 
         if (x == -1) {
-            System.out.println("colonne inconnu : " + nomGauche);
-            return new Relation();
+            throw new IllegalArgumentException("Colonne inconnue : " + nomGauche);
         }
 
         Object constante = null;
@@ -412,7 +455,7 @@ public class Relation {
     }
 
     public Relation jointureGauche(Relation autre, String condition, String newName) {
-        Relation resultat = this.jointure(autre, condition, newName); 
+        Relation resultat = this.jointure(autre, condition, newName);
         int n = this.getAttributLength();
         int m = autre.getAttributLength();
 
@@ -421,15 +464,15 @@ public class Relation {
             boolean apparie = false;
             for (Object p : resultat.individu) {
                 Object[] ligne = (Object[]) p;
-                if (Arrays.equals(Arrays.copyOfRange(ligne, 0, n), gauche)) { 
+                if (Arrays.equals(Arrays.copyOfRange(ligne, 0, n), gauche)) {
                     apparie = true;
                     break;
                 }
             }
             if (!apparie) {
-                Object[] ligne = new Object[n + m]; 
+                Object[] ligne = new Object[n + m];
                 System.arraycopy(gauche, 0, ligne, 0, n);
-                resultat.individu.add(ligne); 
+                resultat.individu.add(ligne);
             }
         }
         return resultat;

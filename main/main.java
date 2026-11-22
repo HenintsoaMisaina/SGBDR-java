@@ -35,9 +35,9 @@ public class main {
         salaire.add(new Object[] { 3, 3, 4000.0 });
         salaire.select();
 
-        emp.jointure(emp.renommer("e1"), "e1.id = emp.id + 1", null).select();
+        emp.jointure(emp.as("e1"), "e1.id = emp.id + 1", null).select();
 
-        emp.jointureGauche(emp.renommer("e2"), "e2.id = emp.id + 1", "R").select();
+        emp.jointureGauche(emp.as("e2"), "e2.id = emp.id + 1", "R").select();
 
     }
 }

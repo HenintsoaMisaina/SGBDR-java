@@ -1,4 +1,4 @@
-package utils;  
+package utils;
 
 /*Objectif : avoir un domaine comme dans tous SGBDR*/
 
@@ -26,6 +26,8 @@ public class Domaine {
             this.name = srt;
             Date a = new Date(1999, 01, 01);
             this.type = new Object[] { a };
+        } else {
+            throw new IllegalArgumentException("Type inconnu : " + srt);
         }
     }
 
@@ -34,28 +36,37 @@ public class Domaine {
             if (a < b) {
                 this.name = intLimite;
                 this.type = new Object[] { a, b };
+            } else {
+                throw new IllegalArgumentException(
+                        "Intervalle invalide : min " + a + " doit etre inferieur a max " + b);
             }
 
         } else {
-            System.out.println("erreur syntaxe");
+            throw new IllegalArgumentException("erreur syntaxe : 'int' attendu, recu " + intLimite);
         }
     }
 
     public Domaine(String varchar, int taille) {
         if (varchar.equalsIgnoreCase("VARCHAR")) {
+            if (taille <= 0) {
+                throw new IllegalArgumentException("VARCHAR : la taille doit etre superieure a 0, recu " + taille);
+            }
             this.name = "VARCHAR";
             this.type = new Object[] { taille };
         } else {
-            System.out.println("erreur : VARCHAR|varchar is the correct syntax");
+            throw new IllegalArgumentException("erreur : VARCHAR|varchar est le syntaxe attendu, recu " + varchar);
         }
     }
 
     public Domaine(String enumeration, Object[] choix) {
         if (enumeration.equalsIgnoreCase("ENUM")) {
+            if (choix == null || choix.length == 0) {
+                throw new IllegalArgumentException("ENUM : la liste des choix ne peut pas etre vide");
+            }
             this.name = "ENUM";
             this.type = choix;
         } else {
-            System.out.println("erreur de syntax");
+            throw new IllegalArgumentException("erreur de syntax : 'ENUM' attendu, recu " + enumeration);
         }
     }
 
@@ -71,8 +82,8 @@ public class Domaine {
         return this.type;
     }
 
-    public int getTypeLength(){
-        return  this.type.length;
+    public int getTypeLength() {
+        return this.type.length;
     }
-    
+
 }
