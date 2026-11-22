@@ -1,4 +1,4 @@
-import java.util.Date;
+package utils;  
 
 /*Objectif : avoir un domaine comme dans tous SGBDR*/
 

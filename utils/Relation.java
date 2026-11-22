@@ -1,25 +1,23 @@
-import java.io.IOException;
-import java.lang.reflect.*;
-import java.security.PublicKey;
+package utils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.Vector;
-
-import javax.security.sasl.RealmCallback;
-
-import org.w3c.dom.Attr;
-
-import java.util.Date;
 
 public class Relation {
     String nom;
     Attribut[] attribut;
     List<Object[]> individu;
 
+    public Relation() {
+    }
+
     public void setNom(String name) {
         this.nom = name;
+    }
+
+    public String getNom() {
+        return this.nom;
     }
 
     public List getIndividu() {
@@ -30,9 +28,26 @@ public class Relation {
         return this.attribut;
     }
 
+    public Relation renommer(String alias) {
+        Attribut[] a = new Attribut[attribut.length];
+        for (int i = 0; i < a.length; i++) {
+            a[i] = attribut[i].qualifie(alias);
+        }
+        Relation r = new Relation(alias, a);
+        r.individu.addAll(this.individu);
+        return r;
+    }
+
     public Relation(String nom, Attribut[] Atr) {
         this.nom = nom;
-        this.attribut = Atr;
+        this.attribut = new Attribut[Atr.length];
+        for (int i = 0; i < Atr.length; i++) {
+            if (Atr[i].getSecondName() == null) {
+                this.attribut[i] = Atr[i].qualifie(nom);
+            } else {
+                this.attribut[i] = Atr[i];
+            }
+        }
         this.individu = new ArrayList<>(100);
     }
 
@@ -46,10 +61,14 @@ public class Relation {
         Object[] toAdd = new Object[tailleAtr];
         for (int i = 0; i < tailleAtr; i++) {
             /* exemple x1 => domaine : varchar */
+            Object nup = nuplet[i];
+            if (nup == null) {
+                toAdd[i] = null;
+                continue;
+            }
             String AtrName = this.attribut[i].getDomaine().getName(); // "pour le nom : VARCHAR"
 
             String nupletType = nuplet[i].getClass().getSimpleName(); // "pour le nom : String"
-            Object nup = nuplet[i];
 
             if (AtrName.equalsIgnoreCase("enum")) {
                 /* on va regarder un par un les choix d'enum et voir si le nup y correspond */
@@ -65,10 +84,8 @@ public class Relation {
                         //
 
                         toAdd[i] = nup;
-
                     }
                 }
-
             } else if (AtrName.equalsIgnoreCase("varchar")) {
                 int tailleMax = (int) attribut[i].getDomaine().getReferenceType();
                 // verification
@@ -103,9 +120,7 @@ public class Relation {
                     // System.out.println("je suis passer ici : int | date | double");
                     //
                     if (AtrName.equalsIgnoreCase("date")) {
-                        Date thisDate = (Date) nup;
-                        String yymmdd = thisDate.toString();
-                        toAdd[i] = yymmdd;
+                        toAdd[i] = nup;
                     } else if (AtrName.equalsIgnoreCase("int")) {
                         int numbr = (int) nup;
                         int typeLength = this.attribut[i].getDomaine().getTypeLength();
@@ -133,12 +148,18 @@ public class Relation {
 
     }
 
+
     public void select() {
+        if (this.individu == null) {
+            System.out.println("tableau vide");
+            return;
+        }
+
         int nbrIndividu = this.individu.size();
         int nbrAttribut = this.attribut.length;
         String tete = "| ";
         for (int j = 0; j < nbrAttribut; j++) {
-            tete = tete + this.attribut[j].getName() + " | ";
+            tete = tete + this.attribut[j].getSecondName() + " | ";
         }
         System.out.println(tete);
         for (int i = 0; i < nbrIndividu; i++) {
@@ -185,19 +206,25 @@ public class Relation {
         return index;
     }
 
-    public Relation project(Attribut[] toproject) {
-        Relation toreturn = new Relation("default", toproject);
-
+    public Relation projection(String[] noms, String newName) {
+        int[] index = new int[noms.length];
+        Attribut[] attrs = new Attribut[noms.length];
+        for (int j = 0; j < noms.length; j++) {
+            index[j] = indexParNom(noms[j]);
+            if (index[j] == -1) {
+                throw new IllegalArgumentException("Colonne inconnue" + noms[j]);
+            }
+            attrs[j] = this.attribut[index[j]];
+        }
         int nbrIndividu = this.individu.size();
-        int nbrAttribut = this.attribut.length;
-        int[] index = this.getIndexOfAttribut(toproject);
+        Relation toreturn = new Relation(newName, attrs);
 
-        for (int k = 0; k < nbrIndividu; k++) {
-            Object[] concern = this.individu.get(k);
-            Object[] ajout = new Object[toproject.length];
+        for (int i = 0; i < nbrIndividu; i++) {
+            Object[] concerne = this.individu.get(i);
+            Object[] ajout = new Object[attrs.length];
             int b = 0;
-            for (int o = 0; o < toproject.length; o++) {
-                ajout[b] = concern[index[o]];
+            for (int o = 0; o < attrs.length; o++) {
+                ajout[b] = concerne[index[o]];
                 b++;
             }
             toreturn.add(ajout);
@@ -206,7 +233,7 @@ public class Relation {
         return toreturn;
     }
 
-    public Relation produit(Relation relation2) {
+    public Relation produit(Relation relation2, String newName) {
         Attribut[] Atr1 = this.getAttribut();
         Attribut[] Atr2 = relation2.getAttribut();
 
@@ -222,7 +249,7 @@ public class Relation {
             newAtr[Atr1.length + i] = Atr2[i];
         }
 
-        Relation toreturn = new Relation("default", newAtr);
+        Relation toreturn = new Relation(newName, newAtr);
 
         for (int i = 0; i < Ind1.size(); i++) {
             Object[] I = (Object[]) Ind1.get(i);
@@ -246,24 +273,23 @@ public class Relation {
         return toreturn;
     }
 
-    private int indexParNom(String nom) {
+    public int indexParNom(String nom) {
         for (int i = 0; i < getAttributLength(); i++) {
-            if (getAttribut()[i].getName().equals(nom)) {
+            if (getAttribut()[i].getSecondName().equals(nom)) {
                 return i;
             }
         }
         return -1;
     }
 
-    private Object valeur(String texte) {
-        try {
-            return Double.parseDouble(texte);
-        } catch (NumberFormatException e) {
+    public Object valeur(String texte, String domaine) {
+        if (domaine.equalsIgnoreCase("varchar") || domaine.equalsIgnoreCase("enum")) {
             return texte;
         }
+        return Double.parseDouble(texte);
     }
 
-    private int comparer(Object a, Object b) {
+    public int comparer(Object a, Object b) {
         if (a instanceof Number && b instanceof Number) {
             double da = ((Number) a).doubleValue();
             double db = ((Number) b).doubleValue();
@@ -274,6 +300,8 @@ public class Relation {
             } else {
                 return 0;
             }
+        } else if (a instanceof Date && b instanceof Date) {
+            return Date.comparer((Date) a, (Date) b);
         } else {
             return a.toString().compareTo(b.toString());
         }
@@ -299,35 +327,76 @@ public class Relation {
         }
     }
 
-    public Relation selection(String condition) {
-        String[] morceaux = condition.trim().split("\\s+");
+    private Object operande(String nom, Object[] ligne) {
+        int k = indexParNom(nom);
+        if (k != -1) {
+            return ligne[k];
+        }
+        try {
+            return Double.parseDouble(nom);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Colonne inconnue ou nombre invalide : " + nom);
+        }
+    }
+
+    private Object calculer(Object a, String op, Object b) {
+        if (a == null || b == null) {
+            return null;
+        }
+        if (!(a instanceof Number) || !(b instanceof Number)) {
+            throw new IllegalArgumentException("Calcul sur une valeur non numérique");
+        }
+        double x = ((Number) a).doubleValue();
+        double y = ((Number) b).doubleValue();
+        if (op.equals("+")) {
+            return x + y;
+        } else if (op.equals("-")) {
+            return x - y;
+        } else if (op.equals("*")) {
+            return x * y;
+        } else {
+            return x / y;
+        }
+
+    }
+
+    public Relation selection(String condition, String newName) {
+        String[] morceaux = condition.split(" ", 3);
         String nomGauche = morceaux[0];
         String operateur = morceaux[1];
         String droite = morceaux[2];
+        String[] expr = morceaux[2].split(" ");
+        boolean calcul = expr.length == 3 && expr[1].matches("[+\\-*/]");
 
         int x = indexParNom(nomGauche);
-        int y = indexParNom(droite);
+        int y = calcul ? -1 : indexParNom(morceaux[2]);
 
         if (x == -1) {
-            throw new IllegalArgumentException("Colonne inconnue : " + nomGauche);
+            System.out.println("colonne inconnu : " + nomGauche);
+            return new Relation();
         }
 
         Object constante = null;
-        if (y == -1) {
-            constante = valeur(droite);
+        if (y == -1 && !calcul) {
+            constante = valeur(droite, this.attribut[x].getDomaine().getName());
         }
 
-        Relation resultat = new Relation("default", getAttribut());
+        Relation resultat = new Relation(newName, getAttribut());
 
         for (int i = 0; i < this.individu.size(); i++) {
             Object[] ligne = (Object[]) this.individu.get(i);
 
             Object valeurGauche = ligne[x];
             Object valeurDroite;
-            if (y == -1) {
+            if (calcul) {
+                valeurDroite = calculer(operande(expr[0], ligne), expr[1], operande(expr[2], ligne));
+            } else if (y == -1) {
                 valeurDroite = constante;
             } else {
                 valeurDroite = ligne[y];
+            }
+            if (valeurGauche == null || valeurDroite == null) {
+                continue;
             }
 
             if (tester(operateur, valeurGauche, valeurDroite)) {
@@ -337,8 +406,32 @@ public class Relation {
         return resultat;
     }
 
-    public Relation jointure(Relation autre, String condition) {
-        Relation produit = this.produit(autre);
-        return produit.selection(condition);
+    public Relation jointure(Relation autre, String condition, String newName) {
+        Relation produit = this.produit(autre, newName);
+        return produit.selection(condition, newName);
+    }
+
+    public Relation jointureGauche(Relation autre, String condition, String newName) {
+        Relation resultat = this.jointure(autre, condition, newName); 
+        int n = this.getAttributLength();
+        int m = autre.getAttributLength();
+
+        for (Object o : this.individu) {
+            Object[] gauche = (Object[]) o;
+            boolean apparie = false;
+            for (Object p : resultat.individu) {
+                Object[] ligne = (Object[]) p;
+                if (Arrays.equals(Arrays.copyOfRange(ligne, 0, n), gauche)) { 
+                    apparie = true;
+                    break;
+                }
+            }
+            if (!apparie) {
+                Object[] ligne = new Object[n + m]; 
+                System.arraycopy(gauche, 0, ligne, 0, n);
+                resultat.individu.add(ligne); 
+            }
+        }
+        return resultat;
     }
 }
