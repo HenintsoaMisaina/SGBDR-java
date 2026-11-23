@@ -1,6 +1,8 @@
 package utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /*Objectif : avoir un domaine comme dans tous SGBDR*/
 
@@ -12,6 +14,7 @@ import java.util.Arrays;
 public class Domaine {
     String name;
     Object[] type;
+    Domaine[] sousDomaines;
 
     public Domaine() {
     }
@@ -72,6 +75,75 @@ public class Domaine {
         }
     }
 
+    // plusieurs domaines (cree par union) =====
+    private Domaine(Domaine[] membres) {
+        this.name = "UNION";
+        this.sousDomaines = membres;
+        this.type = membres;
+    }
+
+    public Domaine[] getSousDomaines() {
+        return this.sousDomaines;
+    }
+
+    // deux domaines simples sont identiques : meme type et memes parametres
+    public boolean identique(Domaine autre) {
+        return this.name.equalsIgnoreCase(autre.name) && Arrays.equals(this.type, autre.type);
+    }
+
+    private static void ajouterMembres(List<Domaine> liste, Domaine d) {
+        Domaine[] membres = d.sousDomaines;
+        if (membres == null) {
+            membres = new Domaine[] { d };
+        }
+        for (Domaine m : membres) {
+            boolean deja = false;
+            for (Domaine x : liste) {
+                if (x.identique(m)) {
+                    deja = true;
+                    break;
+                }
+            }
+            if (!deja) {
+                liste.add(m);
+            }
+        }
+    }
+
+    // meme domaine si identiques, sinon domaine compose (sans doublon)
+    public static Domaine fusion(Domaine d1, Domaine d2) {
+        List<Domaine> liste = new ArrayList<>();
+        ajouterMembres(liste, d1);
+        ajouterMembres(liste, d2);
+        if (liste.size() == 1) {
+            return liste.get(0);
+        }
+        return new Domaine(liste.toArray(new Domaine[0]));
+    }
+
+    public String toString() {
+        if (sousDomaines != null) {
+            String s = "";
+            for (int i = 0; i < sousDomaines.length; i++) {
+                if (i > 0) {
+                    s = s + " | ";
+                }
+                s = s + sousDomaines[i].toString();
+            }
+            return "[" + s + "]";
+        }
+        if (name.equalsIgnoreCase("varchar")) {
+            return "VARCHAR(" + type[0] + ")";
+        }
+        if (name.equalsIgnoreCase("enum")) {
+            return "ENUM" + Arrays.toString(type);
+        }
+        if (name.equalsIgnoreCase("int") && type.length == 2) {
+            return "INT[" + type[0] + ".." + type[1] + "]";
+        }
+        return name.toUpperCase();
+    }
+
     public String getName() {
         return this.name;
     }
@@ -86,18 +158,6 @@ public class Domaine {
 
     public int getTypeLength() {
         return this.type.length;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o){            
-            return true;
-        }
-        if (!(o instanceof Domaine)){
-            return false;
-        }
-        Domaine d = (Domaine) o;
-        return name.equalsIgnoreCase(d.name) && Arrays.equals(type, d.type);
     }
 
 }

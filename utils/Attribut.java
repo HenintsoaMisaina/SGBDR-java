@@ -10,6 +10,12 @@ public class Attribut {
         this.domaine = dom;
     }
 
+    public Attribut avecDomaine(Domaine nouveau) {
+        Attribut c = new Attribut(this.name, nouveau);
+        c.secondName = this.secondName;
+        return c;
+    }
+
     public Attribut qualifie(String relation) {
         Attribut c = new Attribut(this.name, this.domaine);
         c.secondName = relation + "." + this.name;

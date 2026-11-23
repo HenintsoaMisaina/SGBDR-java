@@ -55,6 +55,16 @@ public class Relation {
         return attribut.length;
     }
 
+    private boolean accepte(Domaine d, Object valeur) {
+        try {
+            Relation essai = new Relation("essai", new Attribut[] { new Attribut("c", d) });
+            essai.add(new Object[] { valeur });
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public void add(Object[] nuplet) {
 
         // on verifie que le nuplet a autant de valeurs que d'attributs
@@ -75,6 +85,22 @@ public class Relation {
             String AtrName = this.attribut[i].getDomaine().getName(); // "pour le nom : VARCHAR"
 
             String nupletType = nuplet[i].getClass().getSimpleName(); // "pour le nom : String"
+
+            if (AtrName.equalsIgnoreCase("union")) {
+                Domaine compose = this.attribut[i].getDomaine();
+                boolean trouve = false;
+                for (Domaine d : compose.getSousDomaines()) {
+                    if (accepte(d, nup)) {
+                        trouve = true;
+                        break;
+                    }
+                }
+                if (!trouve) {
+                    throw new IllegalArgumentException("Colonne " + this.attribut[i].getSecondName() + " : " + nup + " (" + nupletType + ") n'est dans aucun des domaines " + compose);
+                }
+                toAdd[i] = nup;
+                continue;
+            }
 
             if (AtrName.equalsIgnoreCase("enum")) {
                 /* on va regarder un par un les choix d'enum et voir si le nup y correspond */
@@ -164,9 +190,31 @@ public class Relation {
             }
 
         }
-
         individu.add(toAdd);
+    }
 
+    public Object valeur(String texte, Domaine d) {
+        Domaine[] membres = d.getSousDomaines();
+        if (membres == null) {
+            return valeur(texte, d.getName());
+        }
+        boolean texteAccepte = false;
+        for (Domaine m : membres) {
+            String nom = m.getName();
+            if (nom.equalsIgnoreCase("varchar") || nom.equalsIgnoreCase("enum")) {
+                texteAccepte = true;
+            } else {
+                try {
+                    return valeur(texte, nom);
+                } catch (IllegalArgumentException e) {
+                    // pas de ce type, on essaie le suivant
+                }
+            }
+        }
+        if (texteAccepte) {
+            return texte;
+        }
+        throw new IllegalArgumentException("Colonne inconnue ou valeur invalide : " + texte);
     }
 
     public void select() {
@@ -421,7 +469,7 @@ public class Relation {
 
         Object constante = null;
         if (y == -1 && !calcul) {
-            constante = valeur(droite, this.attribut[x].getDomaine().getName());
+            constante = valeur(droite, this.attribut[x].getDomaine());
         }
 
         Relation resultat = new Relation(newName, getAttribut());
@@ -487,10 +535,10 @@ public class Relation {
         for (int i=0; i<this.getAttribut().length ;i++){
             Attribut a1 = this.getAttribut()[i];
             Attribut a2 = autre.getAttribut()[i];
-            if (!a1.getName().equalsIgnoreCase(a2.getName())){
+            /*if (!a1.getName().equalsIgnoreCase(a2.getName())){
                 throw new IllegalArgumentException("Relation incompatible  : nom colonne different " );
-            }
-            if (!a1.getDomaine().equals(a2.getDomaine())){
+            }*/
+            if (!a1.getDomaine().getName().equalsIgnoreCase(a2.getDomaine().getName())){
                 throw new IllegalArgumentException("Relation incompatible  : domaine different ");
             }
         }
@@ -526,11 +574,38 @@ public class Relation {
         
         Relation toReturn = new Relation(newName, this.getAttribut());
 
-        for(Object[] individu : autre.getIndividu()){
+        for(Object[] individu : this.getIndividu()){
             if (!autre.contient(individu)){
                 toReturn.add(individu);
             }
         }
+        toReturn.NoDoublon();
+        return toReturn;
+    }
+
+    public Relation union(Relation autre, String newName){
+
+        int n = this.getAttributLength();
+        if (autre.getAttributLength() != n){
+            throw new IllegalArgumentException("Union impossible : nombre de colonnes different (" + n + " et " + autre.getAttributLength() + ")");
+        }
+
+        Attribut[] colonnes = new Attribut[n];
+        for (int i = 0; i < n; i++){
+            Attribut a1 = this.getAttribut()[i];
+            Attribut a2 = autre.getAttribut()[i];
+            colonnes[i] = a1.avecDomaine(Domaine.fusion(a1.getDomaine(), a2.getDomaine()));
+        }
+
+        Relation toReturn = new Relation(newName, colonnes);
+
+        for (Object[] individu : this.getIndividu()){
+            toReturn.add(individu);
+        }
+        for (Object[] individu : autre.getIndividu()){
+            toReturn.add(individu);
+        }
+        toReturn.NoDoublon();
         return toReturn;
     }
 
